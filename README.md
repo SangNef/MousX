@@ -7,7 +7,7 @@ MousX là app chạy trên thanh menu, giúp chuột rời trên macOS dùng gi�
 **Cuộn mượt như trackpad**
 - Mỗi nấc bánh xe được chuyển thành chuyển động pixel liên tục.
 - Khung hình đồng bộ với tần số quét màn hình (CVDisplayLink, 60/120 Hz), lướt dần kiểu ease-out giống MOS.
-- Tuỳ chọn gửi pha cử chỉ kiểu trackpad để có hiệu ứng nảy ở mép trang (thử nghiệm).
+- Gửi pha cử chỉ kiểu trackpad, nên có hiệu ứng nảy ở mép trang (Safari, Finder…).
 - Lăn nhanh thì cuộn xa hơn; chỉnh được tốc độ và độ lướt.
 - Đảo chiều cuộn riêng cho chuột, không ảnh hưởng trackpad.
 - Giữ `⇧` để cuộn ngang, `⌥` để cuộn chính xác. Giữ `⌘` hoặc `⌃` thì để nguyên hành vi gốc (phóng to/thu nhỏ).

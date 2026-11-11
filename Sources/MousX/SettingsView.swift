@@ -254,6 +254,7 @@ private struct ScrollPane: View {
 
     var body: some View {
         Form {
+            ConflictWarning()
             Section {
                 SettingRow(symbol: "wand.and.stars", color: .blue,
                            title: "Cuộn mượt như trackpad",
@@ -283,11 +284,6 @@ private struct ScrollPane: View {
                            title: "Tăng tốc khi lăn nhanh",
                            subtitle: "Dùng gia tốc cuộn của macOS — lăn nhanh để đi xa hơn.") {
                     Toggle("", isOn: $p.acceleration).labelsHidden().toggleStyle(.switch)
-                }
-                SettingRow(symbol: "arrow.up.and.down.square.fill", color: .pink,
-                           title: "Hiệu ứng nảy ở mép trang",
-                           subtitle: "Thử nghiệm · đẹp trong Safari/Finder, có thể kém mượt ở vài ứng dụng.") {
-                    Toggle("", isOn: $p.trackpadPhases).labelsHidden().toggleStyle(.switch)
                 }
             } header: {
                 Text("Cảm giác")
@@ -329,6 +325,61 @@ private struct ScrollPane: View {
             } header: {
                 Text("Phím bổ trợ khi cuộn")
             }
+        }
+    }
+}
+
+/// Cảnh báo khi có app chỉnh cuộn khác đang chạy — hai event tap cùng xử lý cuộn
+/// sẽ giành sự kiện của nhau (ví dụ Mos bắt lại sự kiện của MousX => không cuộn được).
+private struct ConflictWarning: View {
+    private static let knownPrefixes = [
+        "com.caldis.Mos",              // Mos
+        "com.nuebling.mac-mouse-fix",  // Mac Mouse Fix (+ helper)
+        "com.lujjjh.LinearMouse",      // LinearMouse
+        "com.pilotmoon.scroll-reverser" // Scroll Reverser
+    ]
+
+    @State private var apps: [NSRunningApplication] = []
+    private let refresh = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        Group {
+            if !apps.isEmpty {
+                Section {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(.orange)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("\(names) đang chạy")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("Hai app cùng xử lý cuộn sẽ xung đột (giật hoặc không cuộn được). Hãy thoát app kia khi dùng MousX.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 8)
+                        Button("Thoát \(apps.count == 1 ? names : "các app")") {
+                            apps.forEach { $0.terminate() }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { scan() }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+        .onAppear(perform: scan)
+        .onReceive(refresh) { _ in scan() }
+    }
+
+    private var names: String {
+        Array(Set(apps.map { $0.localizedName ?? $0.bundleIdentifier ?? "?" })).sorted().joined(separator: ", ")
+    }
+
+    private func scan() {
+        apps = NSWorkspace.shared.runningApplications.filter { app in
+            guard let id = app.bundleIdentifier else { return false }
+            return Self.knownPrefixes.contains { id.hasPrefix($0) }
         }
     }
 }

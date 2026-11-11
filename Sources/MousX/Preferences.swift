@@ -61,7 +61,6 @@ final class Preferences: ObservableObject {
 
     // Cuộn
     @Published var smoothScroll: Bool { didSet { d.set(smoothScroll, forKey: "smoothScroll") } }
-    @Published var trackpadPhases: Bool { didSet { d.set(trackpadPhases, forKey: "trackpadPhases") } }
     @Published var scrollSpeed: Double { didSet { d.set(scrollSpeed, forKey: "scrollSpeed") } }
     @Published var smoothness: Double { didSet { d.set(smoothness, forKey: "smoothness") } }
     @Published var acceleration: Bool { didSet { d.set(acceleration, forKey: "acceleration") } }
@@ -88,7 +87,6 @@ final class Preferences: ObservableObject {
 
         enabled = bool("enabled", true)
         smoothScroll = bool("smoothScroll", true)
-        trackpadPhases = bool("trackpadPhases", false)
         scrollSpeed = dbl("scrollSpeed", 1.0)
         smoothness = dbl("smoothness", 0.5)
         acceleration = bool("acceleration", true)
@@ -117,7 +115,7 @@ final class Preferences: ObservableObject {
 
     func resetToDefaults() {
         enabled = true
-        smoothScroll = true; trackpadPhases = false; scrollSpeed = 1.0; smoothness = 0.5
+        smoothScroll = true; scrollSpeed = 1.0; smoothness = 0.5
         acceleration = true; reverseVertical = false; reverseHorizontal = false
         shiftHorizontal = true; optionPrecise = true
         gestureButton = .middle; gestureNatural = true; gestureSensitivity = 0.5

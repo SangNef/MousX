@@ -10,8 +10,10 @@ import os
 ///   nên mỗi lần màn hình vẽ lại nhận đúng một phần chuyển động — không giật.
 /// - Mỗi khung hình tiến một tỉ lệ cố định phần quãng đường còn lại (ease-out mũ),
 ///   độc lập với tần số quét.
-/// - Mặc định phát sự kiện "liên tục" không có pha (giống MOS). Tuỳ chọn gửi pha
-///   kiểu trackpad (began/changed/ended) để có hiệu ứng nảy ở mép trang.
+/// - Luôn gửi pha cử chỉ kiểu trackpad: began ở khung đầu, changed suốt hoạt ảnh
+///   (kể cả khi đang lướt), ended khi dừng hẳn — chỉ một cử chỉ cho mỗi lượt cuộn.
+///   Bắt buộc: sự kiện liên tục mà KHÔNG có pha bị các app chỉnh cuộn khác (Mos…)
+///   coi là chuột và bắt lại => trang không cuộn. Có pha thì app còn có hiệu ứng nảy ở mép.
 final class SmoothScroller {
     static let shared = SmoothScroller()
 
@@ -27,7 +29,6 @@ final class SmoothScroller {
     private var flags: CGEventFlags = []
     // Ảnh chụp cấu hình (đọc trên luồng chính, dùng trên luồng display link)
     private var stepPerFrame120 = 0.18
-    private var sendPhases = false
 
     // ---- Chỉ dùng trên luồng chính ----
     private var displayLink: CVDisplayLink?
@@ -70,7 +71,6 @@ final class SmoothScroller {
         flags = f
         // Độ lướt cao => mỗi khung hình (ở 120 Hz) tiêu thụ ít quãng đường hơn.
         stepPerFrame120 = 0.26 - 0.20 * smooth
-        sendPhases = prefs.trackpadPhases
         if !animating { lastFrameTime = 0 }
         animating = true
         os_unfair_lock_unlock(&lock)
@@ -161,17 +161,12 @@ final class SmoothScroller {
         carryX = totalX - ix
 
         let done = abs(remainingY) < 0.5 && abs(remainingX) < 0.5
-        let phases = sendPhases
         let f = flags
 
         var events: [(Int32, Int32, Int64)] = []
         if iy != 0 || ix != 0 {
-            var phase: Int64 = 0
-            if phases {
-                phase = gestureOpen ? 2 : 1
-                gestureOpen = true
-            }
-            events.append((Int32(iy), Int32(ix), phase))
+            events.append((Int32(iy), Int32(ix), gestureOpen ? 2 : 1))
+            gestureOpen = true
         }
         if done {
             if gestureOpen { events.append((0, 0, 4)) }
